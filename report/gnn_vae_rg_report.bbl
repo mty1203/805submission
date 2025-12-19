@@ -1,0 +1,107 @@
+%apsrev4-2.bst 2019-01-14 (MD) hand-edited version of apsrev4-1.bst
+%Control: key (0)
+%Control: author (72) initials jnrlst
+%Control: editor formatted (1) identically to author
+%Control: production of article title (-1) disabled
+%Control: page (0) single
+%Control: year (1) truncated
+%Control: production of eprint (0) enabled
+\begin{thebibliography}{8}%
+\makeatletter
+\providecommand \@ifxundefined [1]{%
+ \@ifx{#1\undefined}
+}%
+\providecommand \@ifnum [1]{%
+ \ifnum #1\expandafter \@firstoftwo
+ \else \expandafter \@secondoftwo
+ \fi
+}%
+\providecommand \@ifx [1]{%
+ \ifx #1\expandafter \@firstoftwo
+ \else \expandafter \@secondoftwo
+ \fi
+}%
+\providecommand \natexlab [1]{#1}%
+\providecommand \enquote  [1]{``#1''}%
+\providecommand \bibnamefont  [1]{#1}%
+\providecommand \bibfnamefont [1]{#1}%
+\providecommand \citenamefont [1]{#1}%
+\providecommand \href@noop [0]{\@secondoftwo}%
+\providecommand \href [0]{\begingroup \@sanitize@url \@href}%
+\providecommand \@href[1]{\@@startlink{#1}\@@href}%
+\providecommand \@@href[1]{\endgroup#1\@@endlink}%
+\providecommand \@sanitize@url [0]{\catcode `\\12\catcode `\$12\catcode
+  `\&12\catcode `\#12\catcode `\^12\catcode `\_12\catcode `\%12\relax}%
+\providecommand \@@startlink[1]{}%
+\providecommand \@@endlink[0]{}%
+\providecommand \url  [0]{\begingroup\@sanitize@url \@url }%
+\providecommand \@url [1]{\endgroup\@href {#1}{\urlprefix }}%
+\providecommand \urlprefix  [0]{URL }%
+\providecommand \Eprint [0]{\href }%
+\providecommand \doibase [0]{https://doi.org/}%
+\providecommand \selectlanguage [0]{\@gobble}%
+\providecommand \bibinfo  [0]{\@secondoftwo}%
+\providecommand \bibfield  [0]{\@secondoftwo}%
+\providecommand \translation [1]{[#1]}%
+\providecommand \BibitemOpen [0]{}%
+\providecommand \bibitemStop [0]{}%
+\providecommand \bibitemNoStop [0]{.\EOS\space}%
+\providecommand \EOS [0]{\spacefactor3000\relax}%
+\providecommand \BibitemShut  [1]{\csname bibitem#1\endcsname}%
+\let\auto@bib@innerbib\@empty
+%</preamble>
+\bibitem [{\citenamefont {Wilson}(1971)}]{wilson1971}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {K.~G.}\ \bibnamefont
+  {Wilson}},\ }\href {https://doi.org/10.1103/PhysRevB.4.3174} {\bibfield
+  {journal} {\bibinfo  {journal} {Phys. Rev. B}\ }\textbf {\bibinfo {volume}
+  {4}},\ \bibinfo {pages} {3174} (\bibinfo {year} {1971})}\BibitemShut
+  {NoStop}%
+\bibitem [{\citenamefont {Kadanoff}(1966)}]{kadanoff1966}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {L.~P.}\ \bibnamefont
+  {Kadanoff}},\ }\href@noop {} {\bibfield  {journal} {\bibinfo  {journal}
+  {Physics}\ }\textbf {\bibinfo {volume} {2}},\ \bibinfo {pages} {263}
+  (\bibinfo {year} {1966})}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Onsager}(1944)}]{onsager1944}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {L.}~\bibnamefont
+  {Onsager}},\ }\href {https://doi.org/10.1103/PhysRev.65.117} {\bibfield
+  {journal} {\bibinfo  {journal} {Phys. Rev.}\ }\textbf {\bibinfo {volume}
+  {65}},\ \bibinfo {pages} {117} (\bibinfo {year} {1944})}\BibitemShut
+  {NoStop}%
+\bibitem [{\citenamefont {Wang}(2016)}]{wang2016}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {L.}~\bibnamefont
+  {Wang}},\ }\href {https://doi.org/10.1103/PhysRevB.94.195105} {\bibfield
+  {journal} {\bibinfo  {journal} {Phys. Rev. B}\ }\textbf {\bibinfo {volume}
+  {94}},\ \bibinfo {pages} {195105} (\bibinfo {year} {2016})}\BibitemShut
+  {NoStop}%
+\bibitem [{\citenamefont {Wetzel}(2017)}]{wetzel2017}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {S.~J.}\ \bibnamefont
+  {Wetzel}},\ }\href {https://doi.org/10.1103/PhysRevE.96.022140} {\bibfield
+  {journal} {\bibinfo  {journal} {Phys. Rev. E}\ }\textbf {\bibinfo {volume}
+  {96}},\ \bibinfo {pages} {022140} (\bibinfo {year} {2017})}\BibitemShut
+  {NoStop}%
+\bibitem [{\citenamefont {Alamino}(2024)}]{alamino2024}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {R.~C.}\ \bibnamefont
+  {Alamino}},\ }\href@noop {} {\bibfield  {journal} {\bibinfo  {journal} {arXiv
+  preprint arXiv:2402.11701}\ } (\bibinfo {year} {2024})}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Koch-Janusz}\ and\ \citenamefont
+  {Ringel}(2018)}]{kochjanusz2018}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {M.}~\bibnamefont
+  {Koch-Janusz}}\ and\ \bibinfo {author} {\bibfnamefont {Z.}~\bibnamefont
+  {Ringel}},\ }\href {https://doi.org/10.1038/s41567-018-0081-0} {\bibfield
+  {journal} {\bibinfo  {journal} {Nature Physics}\ }\textbf {\bibinfo {volume}
+  {14}},\ \bibinfo {pages} {578} (\bibinfo {year} {2018})}\BibitemShut
+  {NoStop}%
+\bibitem [{\citenamefont {Shankar}(2017)}]{shankar2017}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {R.}~\bibnamefont
+  {Shankar}},\ }\href@noop {} {\emph {\bibinfo {title} {Quantum Field Theory
+  and Condensed Matter: An Introduction}}}\ (\bibinfo  {publisher} {Cambridge
+  University Press},\ \bibinfo {year} {2017})\BibitemShut {NoStop}%
+\end{thebibliography}%

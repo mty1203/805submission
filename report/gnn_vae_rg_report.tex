@@ -1,0 +1,401 @@
+% APS / Physical Review style (REVTeX)
+% Compile with: pdflatex -> bibtex -> pdflatex -> pdflatex
+% Use "reprint" for the original Physical Review two-column production style.
+\documentclass[aps,pre,reprint,superscriptaddress,nofootinbib,floatfix]{revtex4-2}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{graphicx}
+\usepackage{subfig} % more compatible with REVTeX than subcaption
+\usepackage{dcolumn}
+\usepackage{bm}
+\usepackage{booktabs}
+\usepackage{hyperref}
+
+\begin{document}
+\raggedbottom
+
+\title{Learning Renormalization-Group-Like Latent Variables with a Hierarchical Graph Neural Network Variational Autoencoder for the 2D Ising Model}
+\author{Tingyu Meng}
+\affiliation{University of Wisconsin--Madison}
+\date{\today}
+
+\begin{abstract}
+We present a self-supervised Graph Neural Network variational autoencoder (GNN-VAE) designed to learn renormalization-group (RG) structure from Monte Carlo configurations of the two-dimensional Ising model. The key inductive bias is an RG consistency loss that encourages a learned latent variable to be approximately invariant under repeated coarse graining. We show that the resulting latent representation correlates strongly with standard physical observables (magnetization and energy density), exhibits two stable fixed points corresponding to the ordered and disordered phases, and supports an empirical ``RG map'' whose dominant eigen-direction aligns with the leading principal component of the latent space. These findings provide evidence that the model learns RG-like variables beyond mere phase classification.
+\end{abstract}
+
+\maketitle
+
+\section{INTRODUCTION}
+
+The renormalization group (RG) is one of the most powerful conceptual frameworks in theoretical physics, providing a systematic way to understand how physical systems behave across different length scales \cite{wilson1971,kadanoff1966}. For the 2D Ising model, RG theory predicts:
+\begin{itemize}
+    \item Two stable fixed points: the paramagnetic (high-temperature) and ferromagnetic (low-temperature) phases
+    \item One unstable fixed point at the critical temperature $K_c \approx 0.4407$ \cite{onsager1944}
+    \item A relevant direction (temperature) that determines which fixed point the system flows to
+\end{itemize}
+
+The central question we address is: \textbf{Can a neural network learn these RG structures without explicit supervision?}
+
+Machine-learning approaches to the Ising model have shown that unsupervised methods can detect phase structure from raw configurations \cite{wang2016,wetzel2017}, and recent work has also focused on making such solutions explainable \cite{alamino2024}. Here we focus on a generative, self-supervised setting and add an explicit scale-consistency inductive bias to encourage learning RG-like variables.
+
+In the Wilsonian picture of RG, one integrates out short-wavelength (high-momentum) modes to obtain an effective free energy
+\[
+F'[\phi] = F[\phi^{-}; a', b', c', \dots]
+\]
+with a new set of couplings $(a', b', c', \dots)$ that depend on the coarse-graining scale. The evolution
+\[
+(a, b, c, \dots) \longrightarrow (a', b', c', \dots)
+\]
+defines an RG flow in coupling space, with relevant directions growing under coarse-graining and irrelevant directions shrinking. In this project we ask a concrete version of the question posed in \textit{``Can a neural network act as a renormalization group?''}: can a GNN-VAE, equipped with a physics-motivated inductive bias, learn both the effective couplings and their RG flow directly from Monte Carlo configurations of the 2D Ising model?
+
+\section{RG BACKGROUND AND NEURAL NETWORK ANALOGY}
+
+\subsection{Wilsonian RG in a Nutshell}
+
+In field theory language, the partition function of a scalar field $\phi$ with a local action
+\begin{equation}
+    F[\phi] = \int d^d x \left[ \frac{1}{2} (\nabla \phi)^2 + \frac{1}{2}\mu^2 \phi^2 + g \phi^4 + \ldots \right]
+\end{equation}
+is
+\begin{equation}
+    Z = \int \mathcal{D}\phi\, e^{-F[\phi]}.
+\end{equation}
+Introducing a momentum cutoff $\Lambda \sim 1/a$ and separating modes into ``slow'' ($|\mathbf{k}|<\Lambda'$) and ``fast'' ($\Lambda'<|\mathbf{k}|<\Lambda$), the Wilsonian RG proceeds by integrating out the fast modes:
+\begin{equation}
+    Z = \int \mathcal{D}\phi^{-} e^{-F_0[\phi^{-}]} \int \mathcal{D}\phi^{+} e^{-F_0[\phi^{+}]} e^{-F_I[\phi^{-},\phi^{+}]}
+    = \int \mathcal{D}\phi^{-} e^{-F'[\phi^{-}; a', b', c', \dots]} ,
+\end{equation}
+thereby generating a new effective action with renormalized couplings $(a', b', c', \dots)$. Repeating this procedure defines a flow in the space of couplings, with fixed points corresponding to scale-invariant theories.
+
+The same idea can be illustrated with a simple zero-dimensional example
+\begin{equation}
+    Z(a,b) = \int dx \int dy\, e^{-a(x^2 + y^2)} e^{-b(x+y)^4},
+\end{equation}
+where integrating out $y$ produces an effective single-variable theory
+\begin{equation}
+    \int dy\, e^{-a(x^2 + y^2)} e^{-b(x+y)^4}
+    = e^{-a' x^2 - b' x^4 - c' x^6 - \dots}.
+\end{equation}
+The transformation $(a,b) \to (a',b',c',\dots)$ is again an RG step in coupling space; relevant couplings grow, irrelevant ones shrink, and their flow organizes the phase structure.
+
+\subsection{Neural Network Analogy}
+
+The above RG picture has a natural analogy in deep learning. A feed-forward network can be viewed as a sequence of coarse-grainings:
+\begin{equation}
+    x^{(0)} \to x^{(1)} = f_1(x^{(0)}; \theta_1) \to x^{(2)} = f_2(x^{(1)}; \theta_2) \to \cdots,
+\end{equation}
+where each layer $f_\ell$ discards some information while preserving features relevant for the final task. In convolutional or graph-based architectures with pooling, early layers focus on local patterns, while deeper layers encode increasingly coarse, global summaries. This mirrors the RG idea of integrating out microscopic degrees of freedom to obtain effective long-distance variables.
+
+In our GNN-VAE:
+\begin{itemize}
+    \item The \emph{tokenizer} enriches spins with local interaction information, analogous to constructing local energy densities.
+    \item Each GCN + pooling block plays the role of a block-spin transformation, reducing the number of sites while propagating information to a coarser lattice.
+    \item The latent variables $z^{(l)}$ at different levels are neural analogues of effective couplings at different RG scales.
+\end{itemize}
+
+The physics consistency loss
+\begin{equation}
+    \mathcal{L}_{\text{RG}} = \frac{1}{L-1}\sum_{l=0}^{L-2} \|z^{(l)} - z^{(l+1)}\|^2
+\end{equation}
+then plays the role of an RG prior: it encodes the belief that true RG variables should be approximately invariant under coarse-graining. Rather than hand-coding the RG map, we let the network learn a representation in which
+\begin{equation}
+    z_{\text{fine}} \approx z_{\text{coarse}} \approx z_{\text{coarse}^2},
+\end{equation}
+and subsequently verify that these learned variables behave as expected from RG theory: they organize the phase diagram, identify fixed points, and align with the relevant eigen-directions of an explicitly fitted linear RG map.
+
+\section{METHOD}
+
+\subsection{Model Architecture}
+
+We employ a hierarchical GNN-VAE with the following structure:
+
+\begin{enumerate}
+    \item \textbf{Tokenizer}: Maps each spin $s_i$ and its local field $h_i = \sum_{j \in \text{neighbors}} s_i s_j$ to a $d$-dimensional token via an MLP
+    \item \textbf{Hierarchical RG Encoder}: Multiple RG blocks, each consisting of:
+    \begin{itemize}
+        \item GCN message passing (local information aggregation)
+        \item Graph coarsening via Graclus pooling (coarse-graining)
+    \end{itemize}
+    \item \textbf{Latent Space}: Each level outputs $\mu^{(l)}, \sigma^{(l)}$ via linear projections, then samples $z^{(l)} = \mu^{(l)} + \sigma^{(l)} \cdot \epsilon$
+    \item \textbf{MLP Decoder}: Reconstructs spin configuration from the final latent $z$
+\end{enumerate}
+
+\subsection{Loss Function}
+
+The total loss combines three terms:
+\begin{equation}
+    \mathcal{L} = \mathcal{L}_{\text{recon}} + \beta \cdot \mathcal{L}_{\text{KL}} + \lambda_{\text{RG}} \cdot \mathcal{L}_{\text{RG}}
+\end{equation}
+
+where:
+\begin{itemize}
+    \item $\mathcal{L}_{\text{recon}}$: reconstruction loss (baseline: mean-squared error on spins)
+    \item $\mathcal{L}_{\text{KL}} = D_{\text{KL}}(q(z|x) \| \mathcal{N}(0,I))$: KL divergence
+    \item $\mathcal{L}_{\text{RG}} = \frac{1}{L-1}\sum_{l=0}^{L-2} \|z^{(l)} - z^{(l+1)}\|^2$: RG consistency loss
+\end{itemize}
+
+The RG consistency loss is the key innovation: it enforces that the latent representation should be \textbf{scale-invariant}, i.e., the same physical state should map to the same $z$ regardless of the observation scale.
+
+\subsection{Dataset and Graph Construction}
+\label{sec:dataset}
+
+We generate Monte Carlo configurations of the 2D nearest-neighbor ferromagnetic Ising model on an $L\times L$ square lattice with periodic boundary conditions, using a Metropolis update. The coupling is $K=J/T$ (we set $k_B=1$). Unless otherwise stated, we use $L=16$ and sample $26$ couplings spanning both phases and the critical region near $K_c\simeq 0.4407$.
+
+Each configuration is represented as an undirected graph with $N=L^2$ nodes. Node features are spins $s_i\in\{-1,+1\}$, and edges connect nearest neighbors on the lattice. For analysis we also compute physical observables directly from configurations:
+\begin{equation}
+|m| = \left| \frac{1}{N}\sum_i s_i \right|,\qquad
+e = -\frac{1}{N}\sum_{\langle ij\rangle} s_i s_j,
+\end{equation}
+where $\langle ij\rangle$ denotes nearest neighbors (counted once).
+
+To encourage the model to ``see'' local energetics, we introduce a tokenizer that maps each spin and a local interaction feature
+\begin{equation}
+h_i = \sum_{j\in \text{n.n.}(i)} s_i s_j
+\end{equation}
+to a learned token embedding via a small MLP.
+
+\subsection{Training Protocol and Hyperparameters}
+\label{sec:training}
+
+We train using Adam with learning rate $10^{-3}$ for $60$ epochs and batch size $32$. The encoder uses two RG steps (coarsening $16\!\rightarrow\!8\!\rightarrow\!4$), hidden dimension $64$, token dimension $16$, and latent dimension $4$ (unless otherwise noted). The loss weights in the baseline run are $\beta=0.1$ and $\lambda_{\mathrm{RG}}=0.5$.
+
+We emphasize that for binary spin data, a Bernoulli likelihood (binary cross entropy on logits) is often better than MSE.).
+
+
+
+
+\begin{figure*}[t]
+    \centering
+    \includegraphics[width=0.95\textwidth]{gnn_vae_rg_architecture.png}
+    \caption{Architecture of the GNN-VAE with hierarchical RG encoder and multi-scale latent outputs.}
+    \label{fig:architecture}
+\end{figure*}
+
+\section{RESULTS}
+
+\subsection{The latent space captures physical information}
+
+\begin{figure}[t]
+    \centering
+    \subfloat[PC1 vs coupling $K$]{\includegraphics[width=0.48\columnwidth]{../analysis_plots/01_pc1_vs_K.png}}
+    \hfill
+    \subfloat[PC1 vs magnetization $|m|$]{\includegraphics[width=0.48\columnwidth]{../analysis_plots/02_pc1_vs_m.png}}
+    \caption{The first principal component (PC1) of the latent space shows strong correlation with physical quantities: (a) the coupling constant $K = J/kT$, and (b) the magnetization $|m|$. The vertical dashed line marks the critical point $K_c \approx 0.44$.}
+    \label{fig:pc1_physics}
+\end{figure}
+
+Figure~\ref{fig:pc1_physics} demonstrates that PC1 is not an abstract mathematical quantity but has clear physical meaning:
+\begin{itemize}
+    \item PC1 increases monotonically with $K$ (inverse temperature)
+    \item PC1 correlates strongly with magnetization $|m|$
+    \item The sharpest change occurs near the critical point $K_c$
+\end{itemize}
+
+\begin{figure}[t]
+    \centering
+    \subfloat[PC1 vs energy density $e$]{\includegraphics[width=0.48\columnwidth]{../analysis_plots/03_pc1_vs_energy.png}}
+    \hfill
+    \subfloat[Magnetization and energy vs $K$]{\includegraphics[width=0.48\columnwidth]{../analysis_plots/09_physical_observables.png}}
+    \caption{Relation between the latent PC1 and traditional observables. PC1 varies smoothly with energy density and mirrors the behavior of magnetization and energy across the phase transition.}
+    \label{fig:pc1_energy_observables}
+\end{figure}
+
+\textbf{Physical interpretation}: PC1 corresponds to the \textbf{relevant direction} in RG theory—it encodes the ``distance from criticality'' or equivalently the degree of order in the system, as confirmed by its strong correlation with both magnetization and energy density.
+
+\subsection{Scale invariance of the latent representation}
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.98\columnwidth]{../analysis_plots/05_latent_diff_vs_K.png}
+    \caption{Latent difference $\|z^{(l)} - z^{(l+1)}\|$ between adjacent coarse-graining levels as a function of $K$. In the ordered phase ($K > K_c$), the difference approaches zero, indicating convergence to a fixed point.}
+    \label{fig:latent_diff}
+\end{figure}
+
+Figure~\ref{fig:latent_diff} reveals a striking pattern:
+\begin{itemize}
+    \item \textbf{Ordered phase} ($K > K_c$): $\|z^{(l)} - z^{(l+1)}\| \to 0$ — the latent representation is nearly identical across scales
+    \item \textbf{Disordered phase} ($K < K_c$): larger differences persist
+\end{itemize}
+
+\textbf{Physical interpretation}: The ordered phase has already ``flowed'' to the ferromagnetic fixed point, where the system is scale-invariant. The disordered phase is still flowing toward the paramagnetic fixed point.
+
+\subsection{Two fixed points in latent space}
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.98\columnwidth]{../analysis_plots/07_fixed_point_convergence.png}
+    \caption{Latent space at different coarse-graining levels. Blue points: paramagnetic samples ($K < K_c$); Red points: ferromagnetic samples ($K > K_c$). Stars mark the centroid of each phase (approximate fixed points).}
+    \label{fig:fixed_points}
+\end{figure}
+
+Figure~\ref{fig:fixed_points} shows that:
+\begin{itemize}
+    \item The two phases remain clearly separated at all scales
+    \item Each phase clusters around its own ``fixed point'' (marked by stars)
+    \item This structure persists from $L=16$ to $L=4$
+\end{itemize}
+
+\textbf{Physical interpretation}: The model has learned the two \textbf{stable RG fixed points}:
+\begin{itemize}
+    \item Blue star: Paramagnetic fixed point ($K^* = 0$, completely disordered)
+    \item Red star: Ferromagnetic fixed point ($K^* = \infty$, completely ordered)
+\end{itemize}
+
+\subsection{RG flow trajectories}
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.98\columnwidth]{../analysis_plots/06_rg_trajectories.png}
+    \caption{RG flow trajectories in latent space. Arrows indicate the direction of coarse-graining (fine $\to$ coarse). Left: colored by phase; Right: colored by $K$ value.}
+    \label{fig:trajectories}
+\end{figure}
+
+Figure~\ref{fig:trajectories} visualizes the RG flow:
+\begin{itemize}
+    \item \textbf{Red trajectories} ($K > K_c$): Short arrows, already near the ferromagnetic fixed point
+    \item \textbf{Blue trajectories} ($K < K_c$): Longer arrows, still flowing toward the paramagnetic fixed point
+    \item The flow direction is always from fine to coarse scale (the essence of RG)
+\end{itemize}
+
+\subsection{RG flow diagram in $(K,\mathrm{PC1})$ space}
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.98\columnwidth]{../analysis_plots/10_rg_flow_diagram.png}
+    \caption{RG flow diagram in the plane of coupling $K$ and latent PC1. Each horizontal arrow connects the same configuration at different coarse-graining levels (16$\times$16 $\rightarrow$ 8$\times$8 $\rightarrow$ 4$\times$4). The blue (red) shaded regions indicate the paramagnetic (ferromagnetic) phase, and the dashed line marks the critical coupling $K_c \approx 0.4407$.}
+    \label{fig:rg_flow_diagram}
+\end{figure}
+
+In Figure~\ref{fig:rg_flow_diagram}, each arrow shows how a single configuration moves in PC1 as it is coarse-grained, at fixed $K$. For $K < K_c$, arrows flow toward the paramagnetic fixed point cluster at negative PC1; for $K > K_c$, they flow toward the ferromagnetic fixed point cluster at positive PC1. The region near $K_c$ shows the largest ``velocity'' in PC1, consistent with an unstable critical fixed point separating the two basins of attraction.
+
+\subsection{Linear RG map and eigenvalue spectrum}
+
+\begin{figure*}[t]
+    \centering
+    \includegraphics[width=\textwidth]{../analysis_plots/08_rg_map_analysis.png}
+    \caption{Analysis of the learned RG map $\mu_{\text{coarse}} \approx W \mu_{\text{fine}} + b$. Left: Fine vs Coarse latent in PCA space. Middle: Prediction accuracy of the linear map. Right: Eigenvalue spectrum of $W$(exclude phase transition temperature).}
+    \label{fig:rg_map}
+\end{figure*}
+
+We fit a linear RG transformation $\mu' = W\mu + b$ and analyze its properties:
+
+\begin{itemize}
+    \item \textbf{Left panel}: Fine (circles) and Coarse (crosses) latents overlap well, confirming $z_{\text{fine}} \approx z_{\text{coarse}}$
+    \item \textbf{Middle panel}: Points lie along $y=x$, indicating the linear map accurately predicts coarse latents
+    \item \textbf{Right panel}: The fitted map exhibits two near-degenerate eigenvalues with $|\lambda|\gtrsim 1$ and a set of eigenvalues with $|\lambda|<1$, consistent with the existence of a low-dimensional ``relevant'' subspace and multiple irrelevant directions.
+\end{itemize}
+
+\textbf{Physical interpretation}: 
+\begin{itemize}
+    \item Eigen-directions with $|\lambda|>1$ correspond to \textbf{relevant} perturbations of the coarse-grained description; $|\lambda|<1$ are \textbf{irrelevant} directions that decay under coarse-graining.
+    \item Directions with $|\lambda| < 1$ are \textbf{irrelevant}—they decay under RG transformation
+    \item In our baseline run, the eigenvalue magnitudes are approximately $|\lambda|=\{1.17,0.76,0.74,0.6\}$  
+    when excluding data near criticality ($|K-K_c|>0.1$). We interpret only one$|\lambda|>1$ as a empirical feature of learned relevant direction for RG process.
+\end{itemize}
+
+\subsection{Model diagnostics: reconstruction and posterior utilization}
+\label{sec:diagnostics}
+
+Because our goal is interpretability of the learned RG-like representation, it is important to also report standard VAE diagnostics that measure whether the model makes effective use of the latent variables.
+
+% \begin{figure}[t]
+%     \centering
+%     \includegraphics[width=0.98\columnwidth]{../vae_quality_check.png}
+%     \caption{VAE diagnostics for the baseline model (MSE reconstruction). Top row: reconstruction MSE vs $K$, KL divergence vs $K$, and per-dimension standard deviation of $\mu$. Bottom row: histograms of reconstruction error and KL, and a scatter of the first two latent mean coordinates colored by $K$.}
+%     \label{fig:vae_diagnostics}
+% \end{figure}
+
+
+To keep the paper scientifically precise, we therefore distinguish between two questions: (i) whether the learned latent \emph{organizes RG structure} (supported by Figs.~\ref{fig:pc1_physics}--\ref{fig:rg_map}), and (ii) whether the model is a high-fidelity \emph{generative model} of Ising configurations (which the baseline does not yet fully achieve). Addressing (ii) is nonetheless important and motivates improved likelihoods and training schedules .
+
+% \subsection{Ablations and robustness checks}
+% \label{sec:ablations}
+
+% Several aspects of our method introduce inductive bias. To separate enforced behavior from emergent structure, we propose the following minimal ablation suite:
+% \begin{enumerate}
+%     \item \textbf{No RG loss} ($\lambda_{\mathrm{RG}}=0$): tests whether PC1--$K$ monotonicity and the fitted RG map eigen-structure persist without explicit scale-consistency.
+%     \item \textbf{$\mu$ vs. $z$ for RG loss}: using $\mu$ reduces sampling noise; using $z$ tests whether invariance survives stochasticity.
+%     \item \textbf{Likelihood choice}: compare MSE on $\{-1,+1\}$ spins vs. Bernoulli likelihood (BCE on logits), which is better matched to discrete spins.
+%     \item \textbf{Decoder inductive bias}: MLP decoder vs. graph decoder to test whether structural constraints affect latent interpretability.
+%     \item \textbf{Critical-region exclusion}: fit $W$ excluding $|K-K_c|<\delta$ and track stability of the number of $|\lambda|>1$ directions with $\delta$.
+% \end{enumerate}
+% All these variants are supported by the codebase via configuration switches. Reporting the full ablation table is a natural next step toward a publication-ready result.
+
+\section{RELATION TO PREVIOUS WORK}
+
+Our approach is closely related to, but distinct from, several earlier attempts to connect RG and machine learning.
+
+Koch-Janusz and Ringel~\cite{kochjanusz2018} proposed to learn RG transformations by maximizing mutual information between inner and outer regions of a spin block, using neural networks as variational ans\"atze for the coarse-graining rule. Their work demonstrated that information-theoretic optimality naturally leads to block-spin rules that resemble real-space RG. In contrast, we do not explicitly optimize mutual information; instead, we enforce an RG-style \emph{consistency loss} in the latent space and show that the resulting representation exhibits the expected fixed points and relevant directions.
+
+Wang~\cite{wang2016} showed that unsupervised methods such as PCA and clustering can detect phase transitions directly from raw spin configurations, even without explicit RG structure. Our results can be viewed as a representation-learning analogue of this idea: we first learn a latent embedding with a physics-informed GNN-VAE, and then perform PCA in the latent space. The fact that the leading principal component aligns with the relevant eigen-direction of a learned RG map suggests that the network has discovered a non-trivial coarse-grained description rather than a purely geometric separation in configuration space.
+
+Finally, from the perspective of field-theoretic RG expositions such as Shankar~\cite{shankar2017}, our linear RG map analysis provides an empirical counterpart to the linearization of RG flows near fixed points. The eigenvalues of the fitted map $W$ play the role of scaling factors $b^{y_i}$ for different operators, with $| \lambda_i | > 1$ corresponding to relevant perturbations and $| \lambda_i | < 1$ to irrelevant ones. This offers a concrete example where such eigen-directions are reconstructed numerically from data by a neural network.
+
+\section{DISCUSSION: BEYOND CLASSIFICATION}
+
+A natural question arises: \textit{Is the model just learning to classify phases?}
+
+We argue that the GNN-VAE learns genuine RG structure, not mere classification:
+
+First, the \textbf{physics consistency loss} $\mathcal{L}_{\text{RG}}$ acts as an explicit inductive bias, encoding the expectation that true RG variables should be invariant under coarse-graining. This bias is inspired by the Wilsonian view that integrating out short-distance degrees of freedom should leave the effective long-distance couplings unchanged, up to flow along relevant directions. In our implementation, enforcing $z^{(l)} \approx z^{(l+1)}$ across scales encourages the latent representation to discard microscopic noise and retain only scale-robust information.
+
+Second, even with this bias, it is \emph{not} guaranteed that the emergent latent coordinate that best separates phases must align with the RG relevant direction. The fact that the PCA direction with largest variance (PC1) also coincides with the dominant eigen-direction of the learned RG map (Section~\ref{fig:rg_map}) is a non-trivial emergent property of training on Ising data with this loss.
+
+% \begin{table}[t]
+% \centering
+% \begin{tabular}{lcc}
+% \toprule
+% \textbf{Property} & \textbf{Classifier} & \textbf{Our GNN-VAE} \\
+% \midrule
+% Phase separation & \checkmark & \checkmark \\
+% Monotonic $z$ vs $K$ & $\times$ & \checkmark \\
+% Scale invariance ($z_{\text{fine}} \approx z_{\text{coarse}}$) & $\times$ & \checkmark \\
+% Physical observable correlation & $\times$ & \checkmark \\
+% Two fixed points & $\times$ & \checkmark \\
+% RG eigenvalue structure & $\times$ & \checkmark \\
+% \bottomrule
+% \end{tabular}
+% \caption{Comparison between a phase classifier and our GNN-VAE.}
+% \end{table}
+
+The key evidence that we learn RG (not just classification):
+\begin{enumerate}
+    \item \textbf{Scale invariance}: $z$ is approximately the same at 16$\times$16, 8$\times$8, and 4$\times$4 scales
+    \item \textbf{Physical interpretability}: PC1 correlates with $|m|$, $K$, and energy density
+    \item \textbf{Correct fixed point structure}: Two stable fixed points connected by the relevant direction
+    \item \textbf{Unsupervised learning}: The model never sees phase labels during training
+\end{enumerate}
+
+\section{CONCLUSION}
+
+We have demonstrated that a GNN-VAE with RG consistency loss can learn the Renormalization Group structure of the 2D Ising model:
+
+\begin{itemize}
+    \item The latent space PC1 corresponds to the \textbf{relevant direction} (temperature/order)
+    \item The model discovers \textbf{two stable fixed points} (paramagnetic and ferromagnetic)
+    \item The latent representation is \textbf{scale-invariant}, especially in the ordered phase
+    \item A fitted linear RG map reveals a low-dimensional relevant subspace whose dominant direction aligns with PC1
+\end{itemize}
+
+This work shows that neural networks can discover deep physical principles—in this case, the RG structure—without explicit supervision, opening possibilities for applying similar techniques to systems where the RG structure is unknown.
+
+\section{LIMITATIONS AND FUTURE WORK}
+\label{sec:limitations}
+
+Our baseline model demonstrates clear RG-like organization in latent space but also exhibits imperfect reconstruction and partial posterior under-utilization. We view these as opportunities for systematic improvement. Promising directions include:
+\begin{itemize}
+    \item \textbf{Bernoulli likelihood for spins}: replace MSE with BCE on logits to better match binary data.
+    \item \textbf{KL scheduling and regularization}: KL annealing and/or free-bits to encourage robust latent usage.
+    \item \textbf{Decoder inductive bias}: a graph-structured decoder may improve reconstruction without sacrificing interpretability.
+    \item \textbf{Oversmoothing and deeper GNNs}: deeper GCN stacks can oversmooth node features; spectral filter designs (e.g., Bernstein polynomial filters) and residual connections are plausible remedies.
+    \item \textbf{More faithful RG linearization}: estimate $W$ in restricted neighborhoods (e.g., near fixed points) and quantify uncertainties to connect more directly to scaling exponents.
+\end{itemize}
+
+
+\bibliographystyle{apsrev4-2}
+\bibliography{refs}
+
+\end{document}
+

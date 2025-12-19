@@ -1,0 +1,43 @@
+\begin{thebibliography}{1}
+
+\bibitem{wilson1971}
+Kenneth~G. Wilson.
+\newblock Renormalization group and critical phenomena. {I}. renormalization
+  group and the kadanoff scaling picture.
+\newblock {\em Phys. Rev. B}, 4:3174--3183, 1971.
+
+\bibitem{kadanoff1966}
+Leo~P. Kadanoff.
+\newblock Scaling laws for ising models near $t_c$.
+\newblock {\em Physics}, 2:263--272, 1966.
+
+\bibitem{wang2016}
+Lei Wang.
+\newblock Discovering phase transitions with unsupervised learning.
+\newblock {\em Phys. Rev. B}, 94:195105, 2016.
+
+\bibitem{wetzel2017}
+Sebastian~J. Wetzel.
+\newblock Unsupervised learning of phase transitions: From principal component
+  analysis to variational autoencoders.
+\newblock {\em Phys. Rev. E}, 96:022140, 2017.
+
+\bibitem{kingma2014}
+Diederik~P. Kingma and Max Welling.
+\newblock Auto-encoding variational bayes.
+\newblock {\em arXiv preprint arXiv:1312.6114}, 2014.
+
+\bibitem{paszke2019}
+Adam Paszke, Sam Gross, Francisco Massa, Adam Lerer, James Bradbury, Gregory
+  Chanan, et~al.
+\newblock Pytorch: An imperative style, high-performance deep learning library.
+\newblock In {\em Advances in Neural Information Processing Systems},
+  volume~32, 2019.
+
+\bibitem{fey2019}
+Matthias Fey and Jan~Eric Lenssen.
+\newblock Fast graph representation learning with {PyTorch Geometric}.
+\newblock In {\em ICLR Workshop on Representation Learning on Graphs and
+  Manifolds}, 2019.
+
+\end{thebibliography}

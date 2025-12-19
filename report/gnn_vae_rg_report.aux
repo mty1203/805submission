@@ -1,0 +1,74 @@
+\relax 
+\providecommand\hyper@newdestlabel[2]{}
+\providecommand\HyField@AuxAddToFields[1]{}
+\providecommand\HyField@AuxAddToCoFields[2]{}
+\citation{wilson1971,kadanoff1966}
+\citation{onsager1944}
+\citation{wang2016,wetzel2017}
+\citation{alamino2024}
+\newlabel{FirstPage}{{}{1}{}{section*.1}{}}
+\@writefile{toc}{\contentsline {title}{Learning Renormalization-Group-Like Latent Variables with a Hierarchical Graph Neural Network Variational Autoencoder for the 2D Ising Model}{1}{section*.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {abstract}{Abstract}{1}{section*.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {I}INTRODUCTION}{1}{section*.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {II}RG BACKGROUND AND NEURAL NETWORK ANALOGY}{1}{section*.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {A}Wilsonian RG in a Nutshell}{1}{section*.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {B}Neural Network Analogy}{2}{section*.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {III}METHOD}{2}{section*.7}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {A}Model Architecture}{2}{section*.8}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {B}Loss Function}{2}{section*.9}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {C}Dataset and Graph Construction}{2}{section*.10}\protected@file@percent }
+\newlabel{sec:dataset}{{III\,C}{2}{}{section*.10}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {D}Training Protocol and Hyperparameters}{3}{section*.11}\protected@file@percent }
+\newlabel{sec:training}{{III\,D}{3}{}{section*.11}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {IV}RESULTS}{3}{section*.13}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {A}The latent space captures physical information}{3}{section*.14}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {B}Scale invariance of the latent representation}{3}{section*.17}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {C}Two fixed points in latent space}{3}{section*.19}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {D}RG flow trajectories}{3}{section*.21}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {E}RG flow diagram in $(K,\mathrm  {PC1})$ space}{3}{section*.23}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {F}Linear RG map and eigenvalue spectrum}{3}{section*.25}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces Architecture of the GNN-VAE with hierarchical RG encoder and multi-scale latent outputs.}}{4}{figure.caption.12}\protected@file@percent }
+\providecommand*\caption@xref[2]{\@setref\relax\@undefined{#1}}
+\newlabel{fig:architecture}{{1}{4}{Architecture of the GNN-VAE with hierarchical RG encoder and multi-scale latent outputs}{figure.caption.12}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces The first principal component (PC1) of the latent space shows strong correlation with physical quantities: (a) the coupling constant $K = J/kT$, and (b) the magnetization $|m|$. The vertical dashed line marks the critical point $K_c \approx 0.44$.}}{4}{figure.caption.15}\protected@file@percent }
+\newlabel{fig:pc1_physics}{{2}{4}{The first principal component (PC1) of the latent space shows strong correlation with physical quantities: (a) the coupling constant $K = J/kT$, and (b) the magnetization $|m|$. The vertical dashed line marks the critical point $K_c \approx 0.44$}{figure.caption.15}{}}
+\@writefile{lof}{\contentsline {subfigure}{\numberline{(a)}{\ignorespaces {PC1 vs coupling $K$}}}{4}{subfigure.2.1}\protected@file@percent }
+\@writefile{lof}{\contentsline {subfigure}{\numberline{(b)}{\ignorespaces {PC1 vs magnetization $|m|$}}}{4}{subfigure.2.2}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Relation between the latent PC1 and traditional observables. PC1 varies smoothly with energy density and mirrors the behavior of magnetization and energy across the phase transition.}}{4}{figure.caption.16}\protected@file@percent }
+\newlabel{fig:pc1_energy_observables}{{3}{4}{Relation between the latent PC1 and traditional observables. PC1 varies smoothly with energy density and mirrors the behavior of magnetization and energy across the phase transition}{figure.caption.16}{}}
+\@writefile{lof}{\contentsline {subfigure}{\numberline{(a)}{\ignorespaces {PC1 vs energy density $e$}}}{4}{subfigure.3.1}\protected@file@percent }
+\@writefile{lof}{\contentsline {subfigure}{\numberline{(b)}{\ignorespaces {Magnetization and energy vs $K$}}}{4}{subfigure.3.2}\protected@file@percent }
+\citation{kochjanusz2018}
+\citation{wang2016}
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Latent difference $\|z^{(l)} - z^{(l+1)}\|$ between adjacent coarse-graining levels as a function of $K$. In the ordered phase ($K > K_c$), the difference approaches zero, indicating convergence to a fixed point.}}{5}{figure.caption.18}\protected@file@percent }
+\newlabel{fig:latent_diff}{{4}{5}{Latent difference $\|z^{(l)} - z^{(l+1)}\|$ between adjacent coarse-graining levels as a function of $K$. In the ordered phase ($K > K_c$), the difference approaches zero, indicating convergence to a fixed point}{figure.caption.18}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces Latent space at different coarse-graining levels. Blue points: paramagnetic samples ($K < K_c$); Red points: ferromagnetic samples ($K > K_c$). Stars mark the centroid of each phase (approximate fixed points).}}{5}{figure.caption.20}\protected@file@percent }
+\newlabel{fig:fixed_points}{{5}{5}{Latent space at different coarse-graining levels. Blue points: paramagnetic samples ($K < K_c$); Red points: ferromagnetic samples ($K > K_c$). Stars mark the centroid of each phase (approximate fixed points)}{figure.caption.20}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {G}Model diagnostics: reconstruction and posterior utilization}{5}{section*.27}\protected@file@percent }
+\newlabel{sec:diagnostics}{{IV\,G}{5}{}{section*.27}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {V}RELATION TO PREVIOUS WORK}{5}{section*.28}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces RG flow trajectories in latent space. Arrows indicate the direction of coarse-graining (fine $\to $ coarse). Left: colored by phase; Right: colored by $K$ value.}}{5}{figure.caption.22}\protected@file@percent }
+\newlabel{fig:trajectories}{{6}{5}{RG flow trajectories in latent space. Arrows indicate the direction of coarse-graining (fine $\to $ coarse). Left: colored by phase; Right: colored by $K$ value}{figure.caption.22}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {7}{\ignorespaces RG flow diagram in the plane of coupling $K$ and latent PC1. Each horizontal arrow connects the same configuration at different coarse-graining levels (16$\times $16 $\rightarrow $ 8$\times $8 $\rightarrow $ 4$\times $4). The blue (red) shaded regions indicate the paramagnetic (ferromagnetic) phase, and the dashed line marks the critical coupling $K_c \approx 0.4407$.}}{5}{figure.caption.24}\protected@file@percent }
+\newlabel{fig:rg_flow_diagram}{{7}{5}{RG flow diagram in the plane of coupling $K$ and latent PC1. Each horizontal arrow connects the same configuration at different coarse-graining levels (16$\times $16 $\rightarrow $ 8$\times $8 $\rightarrow $ 4$\times $4). The blue (red) shaded regions indicate the paramagnetic (ferromagnetic) phase, and the dashed line marks the critical coupling $K_c \approx 0.4407$}{figure.caption.24}{}}
+\citation{shankar2017}
+\@writefile{lof}{\contentsline {figure}{\numberline {8}{\ignorespaces Analysis of the learned RG map $\mu _{\text  {coarse}} \approx W \mu _{\text  {fine}} + b$. Left: Fine vs Coarse latent in PCA space. Middle: Prediction accuracy of the linear map. Right: Eigenvalue spectrum of $W$(exclude phase transition temperature).}}{6}{figure.caption.26}\protected@file@percent }
+\newlabel{fig:rg_map}{{8}{6}{Analysis of the learned RG map $\mu _{\text {coarse}} \approx W \mu _{\text {fine}} + b$. Left: Fine vs Coarse latent in PCA space. Middle: Prediction accuracy of the linear map. Right: Eigenvalue spectrum of $W$(exclude phase transition temperature)}{figure.caption.26}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {VI}DISCUSSION: BEYOND CLASSIFICATION}{6}{section*.29}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {VII}CONCLUSION}{6}{section*.30}\protected@file@percent }
+\bibdata{gnn_vae_rg_reportNotes,refs}
+\bibcite{wilson1971}{{1}{1971}{{Wilson}}{{}}}
+\bibcite{kadanoff1966}{{2}{1966}{{Kadanoff}}{{}}}
+\bibcite{onsager1944}{{3}{1944}{{Onsager}}{{}}}
+\bibcite{wang2016}{{4}{2016}{{Wang}}{{}}}
+\bibcite{wetzel2017}{{5}{2017}{{Wetzel}}{{}}}
+\bibcite{alamino2024}{{6}{2024}{{Alamino}}{{}}}
+\bibcite{kochjanusz2018}{{7}{2018}{{Koch-Janusz\ and\ Ringel}}{{}}}
+\bibcite{shankar2017}{{8}{2017}{{Shankar}}{{}}}
+\bibstyle{apsrev4-2}
+\@writefile{toc}{\contentsline {section}{\numberline {VIII}LIMITATIONS AND FUTURE WORK}{7}{section*.31}\protected@file@percent }
+\newlabel{sec:limitations}{{VIII}{7}{}{section*.31}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {}References}{7}{section*.32}\protected@file@percent }
+\newlabel{LastBibItem}{{8}{7}{}{section*.32}{}}
+\newlabel{LastPage}{{}{7}{}{}{}}
+\gdef \@abspage@last{7}

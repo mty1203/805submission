@@ -1,0 +1,181 @@
+\documentclass[10pt,twocolumn]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[margin=0.75in]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage[numbers,sort&compress]{natbib}
+\usepackage{subfig}
+\usepackage{microtype}
+\usepackage{float}
+
+\setlength{\columnsep}{0.22in}
+\setlength{\parindent}{1em}
+
+\title{\vspace{-0.6cm}Learning Renormalization-Group-Like Latent Variables with a Hierarchical GNN-VAE for the 2D Ising Model\\(Extended Abstract)}
+\author{Tingyu Meng\\University of Wisconsin--Madison}
+\date{}
+
+\begin{document}
+\maketitle
+\vspace{-0.4cm}
+
+\begin{abstract}
+We study whether a generative, self-supervised neural network can learn \emph{renormalization-group (RG)-like} variables from raw Monte Carlo configurations of the two-dimensional Ising model. Our model is a hierarchical graph neural network variational autoencoder (GNN-VAE) equipped with an \emph{RG consistency} loss that encourages the latent representation to remain stable under repeated coarse-graining. We find that the learned latent space (i) correlates with magnetization and energy density, (ii) exhibits two basins consistent with ordered/disordered fixed points, and (iii) supports an empirical linear ``RG map'' whose dominant eigen-direction aligns with the leading principal component (PC1) of the latent space. These observations suggest that the network learns an interpretable, scale-robust coordinate beyond mere phase separation.
+\end{abstract}
+
+\section{Motivation}
+
+Machine-learning approaches to the Ising model have shown that unsupervised methods can detect phase structure from raw configurations \cite{wang2016,wetzel2017}, and recent work has also focused on making such solutions explainable \cite{alamino2024}. Here we focus on a generative, self-supervised setting and add an explicit scale-consistency inductive bias to encourage learning RG-like variables.
+
+In the Wilsonian picture of RG, one integrates out short-wavelength (high-momentum) modes to obtain an effective free energy
+\[
+F'[\phi] = F[\phi^{-}; a', b', c', \dots]
+\]
+with a new set of couplings $(a', b', c', \dots)$ that depend on the coarse-graining scale. The evolution
+\[
+(a, b, c, \dots) \longrightarrow (a', b', c', \dots)
+\]
+defines an RG flow in coupling space, with relevant directions growing under coarse-graining 
+and irrelevant directions shrinking. In this project we ask a concrete version of the question
+ posed in \textit{``Can a neural network act as a renormalization group?''}: 
+ can a GNN-VAE, equipped with a physics-motivated inductive bias, learn both the effective couplings and
+  their RG flow directly from Monte Carlo configurations of the 2D Ising model?
+
+\section{Model and Training}
+We generate 2D Ising configurations on an $L\times L$ square lattice ($L=16$) with periodic boundary conditions using Metropolis updates. Each configuration is encoded as a lattice graph with nearest-neighbor edges. A tokenizer augments each spin $s_i\in\{-1,+1\}$ with a local interaction feature $h_i=\sum_{j\in \mathrm{n.n.}(i)} s_is_j$ before message passing.
+
+Our encoder is hierarchical: repeated GCN+pooling blocks perform coarse-graining $16\!\rightarrow\!8\!\rightarrow\!4$ and output latent parameters $(\mu^{(\ell)},\log\sigma^{2(\ell)})$ at each level. A graph-level latent is sampled via the reparameterization trick $z^{(\ell)}=\mu^{(\ell)}+\sigma^{(\ell)}\epsilon$, and an MLP decoder reconstructs the spin configuration from the final latent.
+
+The objective combines reconstruction, KL regularization, and an RG consistency term:
+\begin{align}
+\mathcal{L} &= \mathcal{L}_{\mathrm{recon}}+\beta\,D_{\mathrm{KL}}(q(z|x)\,\|\,\mathcal{N}(0,I))+\lambda_{\mathrm{RG}}\mathcal{L}_{\mathrm{RG}}, \nonumber\\
+\mathcal{L}_{\mathrm{RG}} &= \frac{1}{L_s-1}\sum_{\ell}\lVert r^{(\ell)}-r^{(\ell+1)}\rVert^2 ,
+\end{align}
+where $r^{(\ell)}$ is a latent representation at level $\ell$ (in practice we use $\mu^{(\ell)}$ for stability) and $L_s$ is the number of scales.
+
+\section{Key Results}
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=\columnwidth]{../analysis_plots/01_pc1_vs_K.png}
+    \caption{First principal component (PC1) of the latent mean $\mu$ versus coupling $K=J/T$. PC1 changes most rapidly near $K_c\simeq 0.4407$, consistent with a relevant thermal direction organizing the two phases.}
+    \label{fig:pc1K}
+\end{figure}
+
+\textbf{Latent interpretability.} Performing PCA on the learned latent means, PC1 varies systematically with the coupling $K$ and correlates with standard observables (magnetization and energy density), indicating that the dominant variance direction is physically meaningful (Fig.~\ref{fig:pc1K}).
+
+\textbf{RG-like flow and fixed points.} Tracking the same configuration under repeated coarse-graining in latent space reveals trajectories that flow toward two distinct basins, consistent with ordered/disordered fixed points.
+\emph{See Appendix Fig.~\ref{fig:app_rg_flow} for a visualization of the learned flow.}
+\textbf{Empirical RG map.} We fit a linear map between latents at adjacent scales, $\mu_{\mathrm{coarse}}\approx W\mu_{\mathrm{fine}}+b$, and analyze the spectrum of $W$. The dominant eigen-direction aligns closely with PC1 (cosine similarity $\approx 1$ in our runs), supporting the interpretation of PC1 as the learned ``relevant'' direction. Excluding samples near the critical region stabilizes the fitted spectrum, highlighting the sensitivity of linearization near criticality.
+\textbf{Physical interpretation}: 
+\begin{itemize}
+    \item Eigen-directions with $|\lambda|>1$ correspond to \textbf{relevant} perturbations of the coarse-grained description; $|\lambda|<1$ are \textbf{irrelevant} directions that decay under coarse-graining.
+    \item In our baseline run, the eigenvalue magnitudes are approximately $|\lambda|=\{1.17,0.76,0.74,0.6\}$  
+    when excluding data near criticality ($|K-K_c|>0.1$). We interpret only one$|\lambda|>1$ as a empirical feature of learned relevant direction for RG process.
+\end{itemize}
+
+\section{Discussion}
+Our results provide multiple, complementary signatures of RG-like organization in a learned latent space: scale-consistent representations, physically interpretable latent axes, and agreement between PCA and a fitted linear RG map. Remaining work toward a publication-quality result includes controlled ablations (e.g., $\lambda_{\mathrm{RG}}=0$) and likelihood choices appropriate for binary spins (Bernoulli/BCE instead of MSE).
+
+\paragraph{Code and repository link.} Please upload your GitHub URL here: \url{<YOUR_GITHUB_REPO_URL>}. The analysis figures are generated by \texttt{analyze\_all.py} and saved in \texttt{analysis\_plots/}. The implementation uses PyTorch and PyTorch Geometric \cite{paszke2019,fey2019}.
+
+\section*{References}
+{\small
+\bibliographystyle{unsrt}
+\bibliography{refs}
+}
+
+\clearpage
+\appendix
+\onecolumn
+
+\section*{Appendix: Mathematical details and additional results}
+\noindent \textbf{Note: Appendix pages do not count toward the 2-page extended abstract limit.}
+
+\subsection*{A. Variational autoencoder (VAE) objective}
+Given an input configuration $x$ (a spin configuration encoded as a graph), the encoder produces a diagonal Gaussian posterior
+\begin{equation}
+q_\phi(z|x) = \mathcal{N}\!\left(z;\mu_\phi(x),\mathrm{diag}(\sigma_\phi^2(x))\right).
+\end{equation}
+We sample latents via the reparameterization trick
+\begin{equation}
+z = \mu + \sigma \odot \epsilon,\qquad \epsilon \sim \mathcal{N}(0,I).
+\end{equation}
+The KL term is
+\begin{equation}
+\mathcal{L}_{\mathrm{KL}} = D_{\mathrm{KL}}(q_\phi(z|x)\,\|\,\mathcal{N}(0,I))
+= -\frac{1}{2}\sum_{i=1}^{d}\left(1+\log\sigma_i^2-\mu_i^2-\sigma_i^2\right),
+\end{equation}
+where $d$ is the latent dimension.
+
+\subsection*{B. Coarse-graining and RG consistency}
+We construct a $2\times 2$ block-spin coarse-graining using a majority rule:
+\begin{equation}
+s'_I = \mathrm{sign}\!\left(\sum_{i\in \mathrm{block}(I)} s_i\right),
+\end{equation}
+with ties assigned to $+1$ in our implementation.
+
+At multiple scales $\ell$ (e.g., $16\!\rightarrow\!8\!\rightarrow\!4$), the hierarchical encoder outputs $(\mu^{(\ell)},\log\sigma^{2(\ell)})$ and we enforce scale-consistency through
+\begin{equation}
+\mathcal{L}_{\mathrm{RG}}=\frac{1}{L_s-1}\sum_{\ell=0}^{L_s-2}\left\lVert r^{(\ell)}-r^{(\ell+1)}\right\rVert^2,
+\end{equation}
+where $r^{(\ell)}$ is a chosen representation (we use $\mu^{(\ell)}$ for stability) and $L_s$ is the number of scales.
+
+\subsection*{C. Linear RG map and eigenvalue spectrum}
+To probe the learned coarse-graining in latent space, we fit a linear map
+\begin{equation}
+\mu_{\mathrm{coarse}} \approx W\,\mu_{\mathrm{fine}} + b
+\end{equation}
+by least-squares regression. The eigenvalues of $W$ provide an empirical linearization: directions with $|\lambda|>1$ behave as relevant perturbations (grow under coarse-graining), while $|\lambda|<1$ correspond to irrelevant directions (shrink).
+
+We also compute the alignment between the dominant eigenvector of $W$ and the first principal component (PC1) direction of the latent space via cosine similarity.
+
+\subsection*{D. Figures and additional results}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.92\textwidth]{gnn_vae_rg_architecture.png}
+    \caption{Architecture of the hierarchical GNN-VAE with multi-scale latents and RG consistency loss.}
+    \label{fig:app_arch}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.92\textwidth]{../analysis_plots/10_rg_flow_diagram.png}
+    \caption{RG flow diagram in $(K,\mathrm{PC1})$ space. Horizontal arrows connect the same configuration across coarse-graining levels (fine$\rightarrow$coarse).}
+    \label{fig:app_rg_flow}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.92\textwidth]{../analysis_plots/05_latent_diff_vs_K.png}
+    \caption{Multi-scale latent consistency $\lVert r^{(\ell)}-r^{(\ell+1)}\rVert$ versus coupling $K$.}
+    \label{fig:app_latent_diff}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.92\textwidth]{../analysis_plots/07_fixed_point_convergence.png}
+    \caption{Fixed point convergence in latent PCA space across scales (phase-colored).}
+    \label{fig:app_fixed_points}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.92\textwidth]{../analysis_plots/06_rg_trajectories.png}
+    \caption{Latent RG trajectories under repeated coarse-graining (fine$\rightarrow$coarse), shown in PCA space.}
+    \label{fig:app_trajectories}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.98\textwidth]{../analysis_plots/08_rg_map_analysis.png}
+    \caption{RG map analysis: fine vs coarse latent overlap, linear map accuracy, and eigenvalue spectrum.}
+    \label{fig:app_rgmap}
+\end{figure}
+
+\end{document}
+
